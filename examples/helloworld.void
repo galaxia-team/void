@@ -1,0 +1,3 @@
+include "std.console.msg"
+
+std.console.msg("Hello, World!")

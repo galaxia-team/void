@@ -1,0 +1,6 @@
+include "std.console.msg"
+
+const name = "John"
+const string = f"Hello, {name}!"
+
+std.console.msg(string)

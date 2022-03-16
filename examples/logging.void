@@ -1,0 +1,7 @@
+include "std.logger.info"
+include "std.logger.warn"
+include "std.logger.error"
+
+std.logger.info("info")
+std.logger.warn("warn")
+std.logger.error("error")

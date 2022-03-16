@@ -1,0 +1,7 @@
+include "std.console.msg"
+include "std.time.wait"
+
+forever {
+    std.console.msg("Hello, World!")
+    std.time.wait(1000)
+}
