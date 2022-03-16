@@ -1,5 +1,5 @@
 # void
-a simple programming language written in python.
+a simple programming language.
 
 void is inspired by python and javascript, and you will see elements from both throughout the language.
 
