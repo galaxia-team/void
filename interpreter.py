@@ -8,7 +8,7 @@ from time import time
 import operator
 from signal import signal, SIGINT
 
-# funcs
+# functions
 def get_scope(line_num, ccmd):
     if ccmd[-1] == "{":
         scope = list(re.findall(".*{", ccmd)[0])
@@ -213,8 +213,8 @@ def interpret(data, args, **kw):
             scope_var = global_var
         if scmd in ops:
             returned = handle_op(line_num, scmd[1], ccmd, scmd, global_var, scope_var)
-        elif scmd[0] == "let":
-            returned = init_var(line_num, "let", ccmd, scope)
+        elif scmd[0] == "var":
+            returned = init_var(line_num, "var", ccmd, scope)
         elif scmd[0] == "const":
             returned = init_var(line_num, "const", ccmd, scope)
         elif ccmd == "break" and "scope" in kw:
