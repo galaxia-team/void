@@ -1,6 +1,6 @@
 # imports
 from sys import argv
-from os import _exit
+from os import _exit, path
 from importlib import import_module
 import re
 from ast import literal_eval
@@ -205,6 +205,10 @@ def exit_void(*args):
         print(f"time to run: {round(runtime, 4)}ms")
     _exit(0)
 
+def void_error(err):
+    print("ERROR |", errors[err])
+    _exit(1)
+
 # interpret
 def interpret(data, args, **kw):
     for data_line_num, line in enumerate(data):
@@ -251,6 +255,11 @@ scopes = {}
 runtime = 0
 setuptime = 0
 void_running = False
+errors = {
+    "file_not_specified": "a file must be specified with the -f flag.",
+    "file_not_found": "the specified file cannot be found.",
+    "file_not_void": "the specified file must have the .void file extension.",
+}
 root = {
     "temp": {}
 }
@@ -265,20 +274,19 @@ a = []
 if argv:
     a = argv
 else:
-    print("you must specify a file.")
-    _exit(1)
+    void_error("file_not_specified")
 
 if "-f" in a:
     file_loc = a[a.index("-f")+1]
     if file_loc[-5:] != ".void":
-        print("file must be a void program with the .void file extension.")
-        _exit(1)
+        void_error("file_not_void")
+    if not path.isfile(file_loc):
+        void_error("file_not_found")
     with open(file_loc, "r") as file_raw:
         file = file_raw.readlines()
         old_file = file
 else:
-    print("you must specify a file.")
-    _exit(1)
+    void_error("file_not_specified")
 
 if "-t" in a:
     setuptime = time() * 1000
