@@ -7,7 +7,6 @@ from ast import literal_eval
 from time import time
 import operator
 from signal import signal, SIGINT
-from lib.std.console.style import text_color
 
 # functions
 def get_scope(line_num, ccmd):
@@ -38,7 +37,7 @@ def get_scope(line_num, ccmd):
             del scope[-1]
             return f'{"".join(scope).strip().replace(" ", "_")}_{current_line_num-1}'
 
-def get_full_multiline_data(line_num, break_char, ccmd):
+def get_data(line_num, break_char, ccmd):
     if ccmd[-1] == break_char:
         data = list(re.sub(".*{", "", ccmd))
         del data[0]
@@ -62,14 +61,14 @@ def parse_input(unparsed_input, scope):
         parsed_input = list(parsed_input)
         del parsed_input[0]
         parsed_input = "".join(parsed_input)
-        fstring_vars = re.findall("{.*}", parsed_input)
+        fstr_var = re.findall("{.*}", parsed_input)
         if scope != "root":
-            parsing_variables = { **variables["globals"], **variables["locals"][scope] }
+            parsing_var = { **var["global"], **var["local"][scope] }
         else:
-            parsing_variables = variables["globals"]
-        for fstring_var in fstring_vars:
-            val = parsing_variables[fstring_var.replace("{", "").replace("}", "")]["val"]
-            parsed_input = parsed_input.replace(fstring_var, val)     
+            parsing_var = var["global"]
+        for fstr in fstr_var:
+            val = parsing_var[fstr.replace("{", "").replace("}", "")]["val"]
+            parsed_input = parsed_input.replace(fstr, val)     
     elif re.match('\".*\"', parsed_input) or re.match("\'.*\'", parsed_input):
         parsed_input = list(parsed_input)
         del parsed_input[0]
@@ -84,45 +83,45 @@ def parse_list(unparsed_list, scope):
 
     parsed_list = unparsed_list
     if scope != "root":
-        parsing_variables = { **variables["globals"], **variables["locals"][scope] }
-        scopes[scope]["arg_processing_tmp"]["strings"] = [ *re.findall('\".*\",', parsed_list), *re.findall("\'.*\',", parsed_list) ]
-        for num, string in enumerate(scopes[scope]["arg_processing_tmp"]["strings"]):
+        parsing_var = { **var["global"], **var["local"][scope] }
+        scopes[scope]["temp"]["arg_strs"] = [ *re.findall('\".*\",', parsed_list), *re.findall("\'.*\',", parsed_list) ]
+        for num, string in enumerate(scopes[scope]["temp"]["arg_strs"]):
             parsed_list = parsed_list.replace(string, f'"str{num}",')
     else:
-        parsing_variables = variables["globals"]
-        root_data["arg_processing_tmp"]["strings"] = [ *re.findall('\".*\,"', parsed_list), *re.findall("\'.*\',", parsed_list) ]
-        for num, string in enumerate(root_data["arg_processing_tmp"]["strings"]):
+        parsing_var = var["global"]
+        root_data["temp"]["arg_strs"] = [ *re.findall('\".*\,"', parsed_list), *re.findall("\'.*\',", parsed_list) ]
+        for num, string in enumerate(root_data["temp"]["arg_strs"]):
             parsed_list = parsed_list.replace(string, f'"str{num}",')
     
-    for variable in parsing_variables:
-        val = parsing_variables[variable]["val"]
-        if f", {variable})" in parsed_list or f",{variable})" in parsed_list:
-            parsed_list = parsed_list.replace(f", {variable})", f", {val})").replace(f",{variable})", f", {val})")
-        if f"({variable}," in parsed_list:
-            parsed_list = parsed_list.replace(f"({variable}, ", f"({val}, ")
-        if parsed_list == f"({variable})":
+    for parse_var in parsing_var:
+        val = parsing_var[parse_var]["val"]
+        if f", {parse_var})" in parsed_list or f",{parse_var})" in parsed_list:
+            parsed_list = parsed_list.replace(f", {parse_var})", f", {val})").replace(f",{parse_var})", f", {val})")
+        if f"({parse_var}," in parsed_list:
+            parsed_list = parsed_list.replace(f"({parse_var}, ", f"({val}, ")
+        if parsed_list == f"({parse_var})":
             return [f"{val}"]
-        while f", {variable}," in parsed_list or f",{variable}," in parsed_list:
-            parsed_list = parsed_list.replace(f", {variable},", f", {val},").replace(f",{variable},", f",{val},")
+        while f", {parse_var}," in parsed_list or f",{parse_var}," in parsed_list:
+            parsed_list = parsed_list.replace(f", {parse_var},", f", {val},").replace(f",{parse_var},", f",{val},")
 
     if scope != "root":
-        scopes[scope]["arg_processing_tmp"]["fstrings"] = [ *re.findall('f\".*\"', parsed_list), *re.findall("f\'.*\'", parsed_list) ]
-        for fstring in scopes[scope]["arg_processing_tmp"]["fstrings"]:
-            fstring_vars = re.findall("{.*}", fstring)
-            for fstring_var in fstring_vars:
-                val = parsing_variables[fstring_var.replace("{", "").replace("}", "")]["val"]
+        scopes[scope]["temp"]["arg_fstrs"] = [ *re.findall('f\".*\"', parsed_list), *re.findall("f\'.*\'", parsed_list) ]
+        for fstring in scopes[scope]["temp"]["arg_fstrs"]:
+            fstring_var = re.findall("{.*}", fstring)
+            for fstring_var in fstring_var:
+                val = parsing_var[fstring_var.replace("{", "").replace("}", "")]["val"]
                 parsed_list = parsed_list.replace(fstring, fstring.replace(fstring_var, val).replace("f", "", 1))
-        for num, string in enumerate(scopes[scope]["arg_processing_tmp"]["strings"]):
+        for num, string in enumerate(scopes[scope]["temp"]["arg_strs"]):
             parsed_list = parsed_list.replace(f"'str{num}',", string)
 
     else:
-        root_data["arg_processing_tmp"]["fstrings"] = [ *re.findall('f\".*\"', parsed_list), *re.findall("f\'.*\'", parsed_list) ]
-        for fstring in root_data["arg_processing_tmp"]["fstrings"]:
-            fstring_vars = re.findall("{.*}", fstring)
-            for fstring_var in fstring_vars:
-                val = parsing_variables[fstring_var.replace("{", "").replace("}", "")]["val"]
+        root_data["temp"]["arg_fstrs"] = [ *re.findall('f\".*\"', parsed_list), *re.findall("f\'.*\'", parsed_list) ]
+        for fstring in root_data["temp"]["arg_fstrs"]:
+            fstring_var = re.findall("{.*}", fstring)
+            for fstring_var in fstring_var:
+                val = parsing_var[fstring_var.replace("{", "").replace("}", "")]["val"]
                 parsed_list = parsed_list.replace(fstring, fstring.replace(fstring_var, val).replace("f", "", 1))
-        for num, string in enumerate(root_data["arg_processing_tmp"]["strings"]):
+        for num, string in enumerate(root_data["temp"]["arg_strs"]):
             parsed_list = parsed_list.replace(f"'str{num}',", string)
     
     parsed_list = literal_eval(parsed_list)
@@ -132,29 +131,29 @@ def parse_list(unparsed_list, scope):
 
     return parsed_list
 
-def initialize_variable(line_num, var_type, ccmd, scope):
-    variable_name = re.sub("=.*", "", ccmd.replace(f"{var_type} ", "")).strip()
-    variable_value = parse_input(re.sub(f"{var_type} {variable_name}.*=", "", ccmd).strip(), scope)
+def init_var(line_num, var_type, ccmd, scope):
+    var_name = re.sub("=.*", "", ccmd.replace(f"{var_type} ", "")).strip()
+    var_val = parse_input(re.sub(f"{var_type} {var_name}.*=", "", ccmd).lstrip(), scope)
 
-    if variable_value[0] == "[":
-        variable_value = get_full_multiline_data(line_num, "]", ccmd)
+    if var_val[0] == "[":
+        var_val = get_data(line_num, "]", ccmd)
 
-    elif variable_value[0] == "{":
-        data = get_full_multiline_data(line_num, "}", ccmd)
-        variable_value = {}
+    elif var_val[0] == "{":
+        data = get_data(line_num, "}", ccmd)
+        var_val = {}
         for pair in data:
             split_pair = pair.split(": ")
-            variable_value[split_pair[0]] = split_pair[1]
+            var_val[split_pair[0]] = split_pair[1]
 
     if scope == "root":
-        variables["globals"][variable_name] = {
+        var["global"][var_name] = {
             "type": var_type,
-            "val": variable_value
+            "val": var_val
         }
     else:
-        variables["locals"][scope][variable_name] = {
+        var["local"][scope][var_name] = {
             "type": var_type,
-            "val": variable_value
+            "val": var_val
         }
 
 def interpret_function(ccmd, scope):
@@ -167,30 +166,30 @@ def interpret_function(ccmd, scope):
     else:
         return interpret(functions[func_name]["code"], args)
 
-def reassign_variable(line_num, scmd, global_vars, scope_vars, scope):
-    global variables
+def modify_var(line_num, scmd, global_var, scope_var, scope):
+    global var
     operator = scmd[1][0]
     if operator != "=":
         operator
     else:     
-        if scmd[0] in scope_vars:
-            variables["locals"][scope][scmd[0]] = scmd[2]
+        if scmd[0] in scope_var:
+            var["local"][scope][scmd[0]] = scmd[2]
         else:
-            variables["globals"][scmd[0]] = scmd[2]
+            var["global"][scmd[0]] = scmd[2]
 
-def interpret_operation(line_num, operator, ccmd, scmd, global_vars, scope_vars):
-    final_operation = scmd
-    for c, i in enumerate(final_operation):
-        if i in operators:
+def handle_op(line_num, op, ccmd, scmd, global_var, scope_var):
+    final_op = scmd
+    for c, i in enumerate(final_op):
+        if i in ops:
             print("wip")
-        if i in scope_vars:
-            final_operation[c] = scope_vars[i]["val"]
+        if i in scope_var:
+            final_op[c] = scope_var[i]["val"]
     return
 
-def close_interpreter(*args):
+def exit_void(*args):
     global runtime
-    global interpreter_running
-    interpreter_running = False
+    global void_running
+    void_running = False
     if "-t" in a:
         if len(args) > 0:
             print("\n")
@@ -204,27 +203,27 @@ def interpret(data, args, **kw):
     for data_line_num, line in enumerate(data):
         line_num = file.index(data[data_line_num])
         returned = ""
-        ccmd = line.strip()
+        ccmd = line.lstrip()
         scmd = ccmd.split()
         scope = get_scope(line_num, ccmd)
-        global_vars = variables["globals"]
+        global_var = var["global"]
         if scope != "root":
-            scope_vars = variables["locals"][scope]
+            scope_var = var["local"][scope]
         else:
-            scope_vars = global_vars
-        if operators in scmd:
-            returned = interpret_operation(line_num, scmd[1], ccmd, scmd, global_vars, scope_vars)
+            scope_var = global_var
+        if scmd in ops:
+            returned = handle_op(line_num, scmd[1], ccmd, scmd, global_var, scope_var)
         elif scmd[0] == "let":
-            returned = initialize_variable(line_num, "let", ccmd, scope)
+            returned = init_var(line_num, "let", ccmd, scope)
         elif scmd[0] == "const":
-            returned = initialize_variable(line_num, "const", ccmd, scope)
+            returned = init_var(line_num, "const", ccmd, scope)
         elif ccmd == "break" and "scope" in kw:
             returned = f"{kw.get('scope')}_break"
         elif len(scmd) > 1 and scmd[1][-1] == "=":
-            returned = reassign_variable(line_num, scmd, global_vars, scope_vars, scope)
+            returned = modify_var(line_num, scmd, global_var, scope_var, scope)
         elif ccmd == "forever {":
-            forever_data = get_full_multiline_data(line_num, "}", ccmd)
-            while interpreter_running:
+            forever_data = get_data(line_num, "}", ccmd)
+            while void_running:
                 breakb = interpret(forever_data, {}, scope=scope)
                 if breakb == f"{scope}_break":
                     return
@@ -239,22 +238,22 @@ keywords = [
     "elif",
     "else"
 ]
-imported_libraries = {}
+libs = {}
 functions = {}
 scopes = {}
 runtime = 0
 setuptime = 0
-interpreter_running = False
+void_running = False
 root_data = {
-    "arg_processing_tmp": {
+    "temp": {
         "strings": []
     }
 }
-variables = {
-    "globals": {},
-    "locals": {},
+var = {
+    "global": {},
+    "local": {},
 }
-operators = ("+", "-", "/", "*", "@", "**", "%")
+ops = ("+", "-", "/", "*", "@", "**", "%")
 
 # process args
 a = []
@@ -278,38 +277,38 @@ if "-t" in a:
 # clean up step 1 + handle imports
 for line_num, line in enumerate(file):
     file[line_num] = line.rstrip()
-    new_line = file[line_num]
-    if 'include "' in new_line:
-        to_import = new_line.replace('include "', "").replace('"', "").split(",")
+    new_line = line.strip()
+    if "include " in new_line:
+        to_import = new_line.replace('include ', "").replace('"', "").replace("'", "").split(",")
         for item in to_import:
-            imported_libraries[item.strip()] = importlib.import_module(f"lib.{item.strip()}", package=None)
-            functions[item.strip()] = {
+            s_item = item.strip()
+            libs[s_item] = importlib.import_module(f"lib.{s_item}", package=None)
+            functions[s_item] = {
                 "type": "included",
-                "code": getattr(imported_libraries[item.strip()], item.strip().split(".")[-1])
+                "code": getattr(libs[s_item], s_item.split(".")[-1])
             }
         file[line_num] = ""
-    elif ' //' in new_line or new_line.strip()[0:2] == "//":
+    elif ' //' in new_line or new_line[0:2] == "//":
         file[line_num] = re.sub("//.*", "", new_line)
-        if new_line.strip() == "":
+        if new_line == "":
             file[line_num] = ""
 
 # clean up step 2
-file = list(filter(("").__ne__, file))
+while "" in file:
+    file.remove("")
 
 # process functions and scopes
 for line_num, line in enumerate(file):
-    scope = get_scope(line_num, line)
-    if scope != "root" and scope not in variables["locals"] and scope not in scopes:
-        scopes[scope] = {
-            "line_num": line_num,
-            "arg_processing_tmp": {"strings": []},
-        }
-        variables["locals"][scope] = {}
-    if line.strip()[0:9] == "function ":
-        func_name = line.strip().replace("function ", "").replace("(", "").replace("", "").strip()
+    s_line = line.lstrip()
+    scope = get_scope(line_num, s_line)
+    if scope != "root" and scope not in var["local"] and scope not in scopes:
+        scopes[scope] = { "temp": {} }
+        var["local"][scope] = {}
+    if s_line[0:9] == "function ":
+        func_name = re.sub("\(.*", "", s_line.replace("function ", ""))
         functions[func_name] = {
             "type": "defined",
-            "code": get_full_multiline_data(line_num, "}", line)
+            "code": get_data(line_num, "}", line)
         }
 
 if "-t" in a:
@@ -317,11 +316,11 @@ if "-t" in a:
     runtime = time() * 1000
 
 # sigint handler
-signal(SIGINT, close_interpreter)
+signal(SIGINT, exit_void)
 
 # actually interpret
-interpreter_running = True
+void_running = True
 interpret(file, {})
 
 # time
-close_interpreter()
+exit_void()
