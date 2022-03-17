@@ -305,10 +305,15 @@ for line_num, line in enumerate(file):
                 "code": getattr(libs[s_item], s_item.split(".")[-1])
             }
         file[line_num] = ""
-    elif ' //' in new_line or new_line[0:2] == "//":
-        file[line_num] = re.sub("//.*", "", new_line)
-        if new_line == "":
-            file[line_num] = ""
+    elif new_line[0:2] == "//":
+        file[line_num] = ""
+    elif new_line[0:2] == "/*":
+        current_line_num = line_num
+        current_line = line
+        while current_line[-2:] != "*/":
+            current_line_num += 1
+            current_line = file[current_line_num]
+            file[current_line_num] = ""
 
 # clean up step 2
 while "" in file:
