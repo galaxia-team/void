@@ -5,4 +5,5 @@ they will not be fixed due to being either impossible to fix, or requiring an un
 
 limitations:
 - comments cannot be on the same line as a piece of code
-    * comments can only be on their OWN LINES.
+	* example 1: `do_stuff() // this comment shouldn't be here!` <- improper
+	* example 2: `// this comment can be here!` <- proper

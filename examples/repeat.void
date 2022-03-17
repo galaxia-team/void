@@ -1,0 +1,5 @@
+include "std.console.msg"
+
+repeat 5 {
+    std.console.msg("this message will be sent 5 times")
+}

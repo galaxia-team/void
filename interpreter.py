@@ -209,6 +209,12 @@ def void_error(err):
     print("ERROR |", errors[err])
     _exit(1)
 
+def inter_inline_expr(expr):
+	try:
+		return int(expr)
+	except:
+		print("uhhhhhh")
+
 # interpret
 def interpret(data, args, **kw):
     for data_line_num, line in enumerate(data):
@@ -235,9 +241,21 @@ def interpret(data, args, **kw):
         elif ccmd == "forever {":
             forever_data = get_data(line_num, "}", ccmd)
             while void_running:
-                breakb = interpret(forever_data, {}, scope=scope)
+                breakb = interpret(forever_data, args, scope=scope)
                 if breakb == f"{scope}_break":
                     return
+        elif scmd[0] == "repeat" and scmd[-1] == "{":
+            repeat_data = get_data(line_num, "}", ccmd)
+            num_expr = scmd
+            del num_expr[0]
+            del num_expr[-1]
+            repeat_times = inter_inline_expr("".join(num_expr))
+            repeated_i = 1
+            while repeated_i < repeat_times:
+                breakb = interpret(repeat_data, args, scope=scope)
+                if breakb == f"{scope}_break":
+                    return
+                repeated_i += 1
         elif ccmd[-1] == ")" and re.findall("[^\s]+\(.*\)", ccmd)[0] == ccmd:
             returned = interpret_func(ccmd, scope)
         if returned:
