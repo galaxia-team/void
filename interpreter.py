@@ -1,14 +1,14 @@
 # imports
 from sys import argv
-import os
-import importlib
+from os import _exit
+from importlib import import_module
 import re
 from ast import literal_eval
 from time import time
 import operator
 from signal import signal, SIGINT
 
-# functions
+# funcs
 def get_scope(line_num, ccmd):
     if ccmd[-1] == "{":
         scope = list(re.findall(".*{", ccmd)[0])
@@ -156,15 +156,15 @@ def init_var(line_num, var_type, ccmd, scope):
             "val": var_val
         }
 
-def interpret_function(ccmd, scope):
+def interpret_func(ccmd, scope):
     full_func = re.findall("[^\s]+\(.*\)", ccmd)[0]
     func_name = full_func.replace("(", "")
     args = parse_list(re.findall("\(.*\)", full_func)[0], scope)
     func_name = ccmd.replace(re.findall("\(.*\)", full_func)[0], "")
-    if functions[func_name]["type"] == "included":
-        return functions[func_name]["code"](*args)
+    if funcs[func_name]["type"] == "included":
+        return funcs[func_name]["code"](*args)
     else:
-        return interpret(functions[func_name]["code"], args)
+        return interpret(funcs[func_name]["code"], args)
 
 def modify_var(line_num, scmd, global_var, scope_var, scope):
     global var
@@ -196,7 +196,7 @@ def exit_void(*args):
         runtime = time() * 1000 - runtime
         print(f"time to setup: {round(setuptime, 4)}ms")
         print(f"time to run: {round(runtime, 4)}ms")
-    os._exit(0)
+    _exit(0)
 
 # interpret
 def interpret(data, args, **kw):
@@ -228,7 +228,7 @@ def interpret(data, args, **kw):
                 if breakb == f"{scope}_break":
                     return
         elif ccmd[-1] == ")" and re.findall("[^\s]+\(.*\)", ccmd)[0] == ccmd:
-            returned = interpret_function(ccmd, scope)
+            returned = interpret_func(ccmd, scope)
         if returned:
             return returned
 
@@ -239,7 +239,7 @@ keywords = [
     "else"
 ]
 libs = {}
-functions = {}
+funcs = {}
 scopes = {}
 runtime = 0
 setuptime = 0
@@ -261,7 +261,7 @@ if argv:
     a = argv
 else:
     print("must specify a file.")
-    os._exit(1)
+    _exit(1)
 
 if "-f" in a:
     with open(a[a.index("-f")+1], "r") as file_raw:
@@ -269,7 +269,7 @@ if "-f" in a:
         old_file = file
 else:
     print("must specify a file.")
-    os._exit(1)
+    _exit(1)
 
 if "-t" in a:
     setuptime = time() * 1000
@@ -282,8 +282,8 @@ for line_num, line in enumerate(file):
         to_import = new_line.replace('include ', "").replace('"', "").replace("'", "").split(",")
         for item in to_import:
             s_item = item.strip()
-            libs[s_item] = importlib.import_module(f"lib.{s_item}", package=None)
-            functions[s_item] = {
+            libs[s_item] = import_module(f"lib.{s_item}", package=None)
+            funcs[s_item] = {
                 "type": "included",
                 "code": getattr(libs[s_item], s_item.split(".")[-1])
             }
@@ -297,16 +297,16 @@ for line_num, line in enumerate(file):
 while "" in file:
     file.remove("")
 
-# process functions and scopes
+# process funcs and scopes
 for line_num, line in enumerate(file):
     s_line = line.lstrip()
     scope = get_scope(line_num, s_line)
     if scope != "root" and scope not in var["local"] and scope not in scopes:
         scopes[scope] = { "temp": {} }
         var["local"][scope] = {}
-    if s_line[0:9] == "function ":
-        func_name = re.sub("\(.*", "", s_line.replace("function ", ""))
-        functions[func_name] = {
+    if s_line[0:9] == "func ":
+        func_name = re.sub("\(.*", "", s_line.replace("func ", ""))
+        funcs[func_name] = {
             "type": "defined",
             "code": get_data(line_num, "}", line)
         }
