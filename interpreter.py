@@ -54,7 +54,7 @@ def get_data(line_num, break_char, ccmd):
         del data[-1]
     return data
 
-def parse_input(unparsed_input, scope):
+def parse_input(unparsed_input, scope, **kw):
     parsed_input = unparsed_input
     
     if re.match('f\".*\"', parsed_input) or re.match("f\'.*\'", parsed_input):
@@ -77,11 +77,18 @@ def parse_input(unparsed_input, scope):
     
     return parsed_input
 
-def parse_list(unparsed_list, scope):
-    if unparsed_list == "()":
-        return []
-
+def parse_list(unparsed_list, scope, **kw):
+    if unparsed_list == "()" or unparsed_list == "[]":
+        return ()
+    
     parsed_list = unparsed_list
+    
+    if parsed_list[0] == "[" and parsed_list[-1] == "]":
+        parsed_list = list(parsed_list)
+        parsed_list[0] = "("
+        parsed_list[-1] = ")"
+        parsed_list = "".join(parsed_list)
+
     if scope != "root":
         parsing_var = { **var["global"], **var["local"][scope] }
         scopes[scope]["temp"]["arg_strs"] = [ *re.findall('\".*\",', parsed_list), *re.findall("\'.*\',", parsed_list) ]
@@ -89,8 +96,8 @@ def parse_list(unparsed_list, scope):
             parsed_list = parsed_list.replace(string, f'"str{num}",')
     else:
         parsing_var = var["global"]
-        root_data["temp"]["arg_strs"] = [ *re.findall('\".*\,"', parsed_list), *re.findall("\'.*\',", parsed_list) ]
-        for num, string in enumerate(root_data["temp"]["arg_strs"]):
+        root["temp"]["arg_strs"] = [ *re.findall('\".*\,"', parsed_list), *re.findall("\'.*\',", parsed_list) ]
+        for num, string in enumerate(root["temp"]["arg_strs"]):
             parsed_list = parsed_list.replace(string, f'"str{num}",')
     
     for parse_var in parsing_var:
@@ -100,7 +107,7 @@ def parse_list(unparsed_list, scope):
         if f"({parse_var}," in parsed_list:
             parsed_list = parsed_list.replace(f"({parse_var}, ", f"({val}, ")
         if parsed_list == f"({parse_var})":
-            return [f"{val}"]
+            return (val)
         while f", {parse_var}," in parsed_list or f",{parse_var}," in parsed_list:
             parsed_list = parsed_list.replace(f", {parse_var},", f", {val},").replace(f",{parse_var},", f",{val},")
 
@@ -115,19 +122,16 @@ def parse_list(unparsed_list, scope):
             parsed_list = parsed_list.replace(f"'str{num}',", string)
 
     else:
-        root_data["temp"]["arg_fstrs"] = [ *re.findall('f\".*\"', parsed_list), *re.findall("f\'.*\'", parsed_list) ]
-        for fstring in root_data["temp"]["arg_fstrs"]:
+        root["temp"]["arg_fstrs"] = [ *re.findall('f\".*\"', parsed_list), *re.findall("f\'.*\'", parsed_list) ]
+        for fstring in root["temp"]["arg_fstrs"]:
             fstring_var = re.findall("{.*}", fstring)
             for fstring_var in fstring_var:
                 val = parsing_var[fstring_var.replace("{", "").replace("}", "")]["val"]
                 parsed_list = parsed_list.replace(fstring, fstring.replace(fstring_var, val).replace("f", "", 1))
-        for num, string in enumerate(root_data["temp"]["arg_strs"]):
+        for num, string in enumerate(root["temp"]["arg_strs"]):
             parsed_list = parsed_list.replace(f"'str{num}',", string)
     
     parsed_list = literal_eval(parsed_list)
-    
-    if not isinstance(parsed_list, tuple):
-        parsed_list = [parsed_list]
 
     return parsed_list
 
@@ -162,7 +166,10 @@ def interpret_func(ccmd, scope):
     args = parse_list(re.findall("\(.*\)", full_func)[0], scope)
     func_name = ccmd.replace(re.findall("\(.*\)", full_func)[0], "")
     if funcs[func_name]["type"] == "included":
-        return funcs[func_name]["code"](*args)
+        if isinstance(args, tuple):
+            return funcs[func_name]["code"](*args)
+        else:
+            return funcs[func_name]["code"](args)
     else:
         return interpret(funcs[func_name]["code"], args)
 
@@ -244,10 +251,8 @@ scopes = {}
 runtime = 0
 setuptime = 0
 void_running = False
-root_data = {
-    "temp": {
-        "strings": []
-    }
+root = {
+    "temp": {}
 }
 var = {
     "global": {},
@@ -260,15 +265,19 @@ a = []
 if argv:
     a = argv
 else:
-    print("must specify a file.")
+    print("you must specify a file.")
     _exit(1)
 
 if "-f" in a:
-    with open(a[a.index("-f")+1], "r") as file_raw:
+    file_loc = a[a.index("-f")+1]
+    if file_loc[-5:] != ".void":
+        print("file must be a void program with the .void file extension.")
+        _exit(1)
+    with open(file_loc, "r") as file_raw:
         file = file_raw.readlines()
         old_file = file
 else:
-    print("must specify a file.")
+    print("you must specify a file.")
     _exit(1)
 
 if "-t" in a:
