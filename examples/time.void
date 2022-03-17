@@ -1,0 +1,7 @@
+import "std.time.wait"
+import "std.time.timenow"
+import "std.time.timesince"
+import "std.console.msg"
+
+std.console.msg("waiting 1 second before continuing")
+std.time.wait(1000)

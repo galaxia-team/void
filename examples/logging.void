@@ -1,7 +1,9 @@
 include "std.logger.info"
+include "std.logger.notice"
 include "std.logger.warn"
 include "std.logger.error"
 
 std.logger.info("info")
+std.logger.notice("notice")
 std.logger.warn("warn")
 std.logger.error("error")
