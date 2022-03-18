@@ -1,5 +1,9 @@
 include "std.console.msg"
 
-repeat 5 {
-    std.console.msg("this message will be sent 5 times")
+const times = 5
+var count = 0
+
+repeat times {
+    count += 1
+    std.console.msg("iteration", count)
 }
