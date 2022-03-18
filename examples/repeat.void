@@ -6,4 +6,6 @@ var count = 0
 repeat times {
     count += 1
     std.console.msg("iteration", count)
+    continue
+    std.console.msg("this message wont print")
 }

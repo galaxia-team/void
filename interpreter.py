@@ -11,9 +11,7 @@ from signal import signal, SIGINT
 # functions
 def get_scope(line_num, ccmd):
     if ccmd[-1] == "{":
-        scope = list(re.findall(".*{", ccmd)[0])
-        del scope[-1]
-        return f'{"".join(scope).strip().replace(" ", "_")}_{line_num}'
+        return f'{"".join(list(re.findall(".*{", ccmd)[0])[:-1]).strip().replace(" ", "_")}_{line_num}'
     else:
         current_line_num = line_num + 1
         current_line = file[line_num]
@@ -33,15 +31,11 @@ def get_scope(line_num, ccmd):
                         return "root"
         
         if current_line[-1] == "{":
-            scope = list(re.findall(".*{", current_line)[0])
-            del scope[-1]
-            return f'{"".join(scope).strip().replace(" ", "_")}_{current_line_num-1}'
+            return f'{"".join(list(re.findall(".*{", current_line)[0])[:-1]).strip().replace(" ", "_")}_{current_line_num-1}'
 
-def get_data(line_num, break_char, ccmd):
+def get_data(line_num, start_char, break_char, ccmd):
     if ccmd[-1] == break_char:
-        data = list(re.sub(".*{", "", ccmd))
-        del data[0]
-        return ["".join(data)]
+        return ["".join(list(re.sub(f".*{start_char}", "", ccmd))[:-1])]
     else:
         current_line_num = line_num
         current_line = ccmd
@@ -50,26 +44,20 @@ def get_data(line_num, break_char, ccmd):
             current_line_num += 1
             current_line = file[current_line_num]
             data.append(current_line)
-        del data[0]
-        del data[-1]
+        data = data[1:-1]
     return data
 
 def parse_string(unparsed_string, inter_var, **kw):
     parsed_string = unparsed_string
     
     if re.match('f\".*\"', parsed_string) or re.match("f\'.*\'", parsed_string):
-        parsed_string = list(parsed_string)
-        del parsed_string[0]
-        parsed_string = "".join(parsed_string)
+        parsed_string = "".join(list(parsed_string)[1:])
         fstr_var = re.findall("{.*}", parsed_string)
         for fstr in fstr_var:
             val = inter_var[fstr.replace("{", "", 1).replace("}", "", 1)]["val"]
             parsed_string = parsed_string.replace(fstr, val)     
     elif re.match('\".*\"', parsed_string) or re.match("\'.*\'", parsed_string):
-        parsed_string = list(parsed_string)
-        del parsed_string[0]
-        del parsed_string[-1]
-        parsed_string = "".join(parsed_string)
+        parsed_string = "".join(list(parsed_string)[1:-1])
     
     return parsed_string
 
@@ -80,10 +68,7 @@ def parse_list(unparsed_list, inter_var, scope, ccmd, **kw):
     parsed_list = unparsed_list
 
     if "," not in parsed_list:
-        parsed_list = list(parsed_list)
-        del parsed_list[0]
-        del parsed_list[-1]
-        return inter_inline_expr("".join(parsed_list), inter_var, scope, ccmd)
+        return parse_expr("".join(list(parsed_list)[1:-1]), inter_var, scope, ccmd)
         
     if parsed_list[0] == "[" and parsed_list[-1] == "]":
         parsed_list = list(parsed_list)
@@ -137,19 +122,21 @@ def parse_list(unparsed_list, inter_var, scope, ccmd, **kw):
 
     return parsed_list
 
-def init_var(line_num, var_type, ccmd, inter_var, scope):
-    var_name = re.sub("=.*", "", ccmd.replace(f"{var_type} ", "")).strip()
-    var_val = inter_inline_expr(re.sub(f"{var_type} {var_name}.*=", "", ccmd).lstrip(), inter_var, scope, ccmd)
+def init_var(line_num, var_mode, ccmd, inter_var, scope):
+    var_name = re.sub("=.*", "", ccmd.replace(f"{var_mode} ", "")).strip()
+    var_val = parse_expr(re.sub(f"{var_mode} {var_name}.*=", "", ccmd).lstrip(), inter_var, scope, ccmd)
 
     if scope == "root":
         var["global"][var_name] = {
-            "type": var_type,
+            "mutable": var_mode == "var",
+            "type": type(var_val),
             "scope": "root",
             "val": var_val
         }
     else:
         var["local"][scope][var_name] = {
-            "type": var_type,
+            "mutable": var_mode == "var",
+            "type": type(var_val),
             "scope": scope,
             "val": var_val
         }
@@ -169,28 +156,45 @@ def interpret_func(ccmd, inter_var, scope):
 
 def modify_var(line_num, scmd, inter_var, scope):
     operator = scmd[1][:-1]
-    if operator:
-        if scmd[0] in var["local"][scope]:
-            if var["local"][scope][scmd[0]]["type"] == "var":
+    if scope != "root" and scmd[0] in var["local"][scope]:
+        if var["local"][scope][scmd[0]]["mutable"]:
+            if operator:
                 var["local"][scope][scmd[0]]["val"] = ops[operator](var["local"][scope][scmd[0]]["val"], int(scmd[2]))
             else:
-                void_error("const_immutable", arg_line_num=line_num)
+                var["local"][scope][scmd[0]]["val"] = scmd[2]
         else:
-            if var["global"][scmd[0]]["type"] == "var":
+            void_error("const_immutable", arg_line_num=line_num)
+    else:
+        if var["global"][scmd[0]]["mutable"]:
+            if operator:
                 var["global"][scmd[0]]["val"] = ops[operator](var["global"][scmd[0]]["val"], int(scmd[2]))
             else:
-                void_error("const_immutable", arg_line_num=line_num)
-    else:
-        if scmd[0] in var["local"][scope]:
-            if var["local"][scope][scmd[0]]["type"] == "var":
-                var["local"][scope][scmd[0]]["val"] = scmd[2]
-            else:
-                void_error("const_immutable", arg_line_num=line_num)
-        else:
-            if var["global"][scmd[0]]["type"] == "var":
                 var["global"][scmd[0]]["val"] = scmd[2]
-            else:
-                void_error("const_immutable", arg_line_num=line_num)
+        else:
+            void_error("const_immutable", arg_line_num=line_num)
+
+def modify_seq(line_num, ccmd, inter_var, scope):
+    seq = re.findall(".+?(?=\[)", ccmd)[0]
+    locs = re.findall("(?<=\[)(.*?)(?=\])", re.findall(".+?(?=\=)", ccmd))
+    new_val = parse_expr(re.sub(f"{seq}.*=", "", ccmd).lstrip(), inter_var, scope, ccmd)
+    if scope != "root" and seq in var["local"][scope]:
+        if var["local"][scope][seq]["type"] == list:
+            try:
+                var["local"][scope][seq]["val"][locs] = new_val
+            except:
+                void_error("loc_not_int", arg_line_num=line_num)
+        else:
+            var["local"][scope][seq]["val"][locs] = new_val
+    else:
+        if var["global"][seq]["type"] == list:
+            try:
+                for count, loc in enumerate(locs):
+                    locs[count] = int(loc)
+                var["global"][seq]["val"][locs] = new_val
+            except:
+                void_error("loc_not_int", arg_line_num=line_num)
+        else:
+            var["global"][seq]["val"][locs] = new_val
 
 def handle_op(line_num, op, ccmd, scmd, global_var, scope_var):
     final_op = scmd
@@ -230,7 +234,7 @@ def get_var(scope):
     else:
         return var["global"]
 
-def inter_inline_expr(expr, inter_var, scope, ccmd):
+def parse_expr(expr, inter_var, scope, ccmd):
     try:
         return int(expr)
     except:
@@ -247,9 +251,9 @@ def inter_inline_expr(expr, inter_var, scope, ccmd):
                     except:
                         return val
             elif expr[0] == "[":
-                return get_data(line_num, "]", ccmd)
+                return get_data(line_num, "[", "]", ccmd)
             elif expr[0] == "{":
-                data = get_data(line_num, "}", ccmd)
+                data = get_data(line_num, "{", "}", ccmd)
                 final_dict = {}
                 for pair in data:
                     split_pair = pair.split(": ")
@@ -261,7 +265,7 @@ def inter_inline_expr(expr, inter_var, scope, ccmd):
                 interpret_func(expr, inter_var, scope)
 
 # interpret
-def interpret(data, args, **kw):
+def interpret(data, args):
     for data_line_num, line in enumerate(data):
         line_num = file.index(data[data_line_num])
         returned = ""
@@ -269,32 +273,37 @@ def interpret(data, args, **kw):
         scmd = ccmd.split()
         scope = get_scope(line_num, ccmd)
         inter_var = get_var(scope)
-        if scmd[0] == "var":
+        if ccmd == "pass":
+            pass
+        elif scmd[0] == "var":
             returned = init_var(line_num, "var", ccmd, inter_var, scope) 
         elif scmd[0] == "const":
             returned = init_var(line_num, "const", ccmd, inter_var, scope)
-        elif ccmd == "break" and "scope" in kw:
-            returned = f"{kw.get('scope')}_break"
-        elif len(scmd) > 1 and scmd[1][-1] == "=":
+        elif ccmd == "break":
+            returned = "break"
+        elif ccmd == "continue":
+            returned = "continue"
+        elif len(scmd) > 1 and scmd[1][-1] == "=" and "[" not in scmd[0]:
             returned = modify_var(line_num, scmd, inter_var, scope)
         elif ccmd == "forever {":
-            forever_data = get_data(line_num, "}", ccmd)
+            forever_data = get_data(line_num, "{", "}", ccmd)
             while void_running:
-                breakb = interpret(forever_data, args, scope=scope)
-                if breakb == f"{scope}_break":
+                forever_returned = interpret(forever_data, args)
+                if forever_returned == "break":
                     return
+                elif forever_returned == "continue":
+                    continue
         elif scmd[0] == "repeat" and scmd[-1] == "{":
-            repeat_data = get_data(line_num, "}", ccmd)
-            num_expr = scmd
-            del num_expr[0]
-            del num_expr[-1]
-            repeat_times = inter_inline_expr("".join(num_expr), inter_var, scope, ccmd)
-            repeated_i = 1
-            while repeated_i < repeat_times:
-                breakb = interpret(repeat_data, args, scope=scope)
-                if breakb == f"{scope}_break":
+            repeat_data = get_data(line_num, "{", "}", ccmd)
+            repeat_times = parse_expr("".join(scmd[1:-1]), inter_var, scope, ccmd)
+            for _ in range(repeat_times-1):
+                repeat_returned = interpret(repeat_data, args)
+                if repeat_returned == "break":
                     return
-                repeated_i += 1
+                elif repeat_returned == "continue":
+                    continue
+        elif "[" in ccmd and "]" in ccmd and re.findall(".+?(?=\[)", ccmd)[0] in inter_var:
+            returned = modify_seq(line_num, ccmd, inter_var, scope)
         elif ccmd[-1] == ")" and re.findall("[^\s]+\(.*\)", ccmd)[0] == ccmd:
             returned = interpret_func(ccmd, inter_var, scope)
         if returned:
@@ -319,7 +328,8 @@ no_line_errors = {
 }
 errors = {
     "cannot_concat_int": "integers and strings cannot be concatenated.",
-    "const_immutable": "variables defined with const are immutable; they cannot be modified."
+    "const_immutable": "variables defined with const are immutable; they cannot be modified.",
+    "loc_not_int": "if changing an item in a list, the index must be an integer."
 }
 root = {
     "temp": {}
@@ -342,7 +352,7 @@ ops = {
     ">>": operator.rshift,
     "<<": operator.lshift,
 }
-file_offset = 0
+file_offset = 1
 
 # process args
 a = []
@@ -406,7 +416,7 @@ for line_num, line in enumerate(file):
         func_name = re.sub("\(.*", "", s_line.replace("func ", ""))
         funcs[func_name] = {
             "type": "defined",
-            "code": get_data(line_num, "}", line)
+            "code": get_data(line_num, "{", "}", line)
         }
 
 if "-t" in a:

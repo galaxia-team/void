@@ -1,0 +1,9 @@
+include "std.console.msg"
+
+var list = ["apple", "banana"]
+
+std.console.msg(list)
+
+list[0] = "orange"
+
+std.console.msg(list)
