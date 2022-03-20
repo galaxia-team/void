@@ -1,0 +1,7 @@
+include "std.console.msg"
+
+func print_msg(msg) {
+    std.console.msg(msg)
+}
+
+print_msg("hi")

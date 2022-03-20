@@ -68,7 +68,7 @@ def parse_list(unparsed_list, inter_var, scope, ccmd, **kw):
     parsed_list = unparsed_list
 
     if "," not in parsed_list:
-        return parse_expr("".join(list(parsed_list)[1:-1]), inter_var, scope, ccmd)
+        return parse_expr("".join(list(parsed_list)[1:-1]), inter_var, scope, ccmd, args=kw.get("args"))
         
     if parsed_list[0] == "[" and parsed_list[-1] == "]":
         parsed_list = list(parsed_list)
@@ -141,10 +141,10 @@ def init_var(line_num, var_mode, ccmd, inter_var, scope):
             "val": var_val
         }
 
-def interpret_func(ccmd, inter_var, scope):
+def interpret_func(ccmd, inter_var, scope, **kw):
     full_func = re.findall("[^\s]+\(.*\)", ccmd)[0]
     func_name = full_func.replace("(", "")
-    args = parse_list(re.findall("\(.*\)", full_func)[0], inter_var, scope, ccmd)
+    args = merge_var_dicts(parse_list(re.findall("\(.*\)", full_func)[0], inter_var, scope, ccmd), kw.get("args"))
     func_name = ccmd.replace(re.findall("\(.*\)", full_func)[0], "")
     if funcs[func_name]["type"] == "included":
         if isinstance(args, tuple):
@@ -152,7 +152,7 @@ def interpret_func(ccmd, inter_var, scope):
         else:
             return funcs[func_name]["code"](args)
     else:
-        return interpret(funcs[func_name]["code"], args)
+        return interpret(funcs[func_name]["code"], args=args)
 
 def modify_var(line_num, scmd, inter_var, scope):
     operator = scmd[1][:-1]
@@ -224,24 +224,30 @@ def void_error(err, **kw):
         print(f"ERROR (line {kw.get('arg_line_num')+file_offset}) |", errors[err])
     _exit(1)
 
+def merge_var_dicts(dict1, dict2):
+    if dict2 not in empty:
+        merged_dict = dict1
+        for d2var in dict2:
+            merged_dict[d2var] = dict2[d2var]["val"]
+        return merged_dict
+    else:
+        return dict1
+
 def get_var(scope):
     if scope != "root":
-        merged_var = var["global"]
-        scope_var = var["local"][scope]
-        for svar in scope_var:
-            merged_var[svar] = scope_var[svar]["val"]
-        return merged_var
+        merge_var_dicts(var["global"], var["local"][scope])
     else:
         return var["global"]
 
-def parse_expr(expr, inter_var, scope, ccmd):
+def parse_expr(expr, inter_var, scope, ccmd, **kw):
+    args = kw.get("args")
     try:
         return int(expr)
     except:
         try:
             return float(expr)
         except:
-            if expr in inter_var:
+            if inter_var not in empty and expr in inter_var:
                 val = inter_var[expr]["val"]
                 try:
                     return int(val)
@@ -250,6 +256,8 @@ def parse_expr(expr, inter_var, scope, ccmd):
                         return float(val)
                     except:
                         return val
+            elif args not in empty and expr in args:
+                return args[expr]["val"]
             elif expr[0] == "[":
                 return get_data(line_num, "[", "]", ccmd)
             elif expr[0] == "{":
@@ -265,7 +273,7 @@ def parse_expr(expr, inter_var, scope, ccmd):
                 interpret_func(expr, inter_var, scope)
 
 # interpret
-def interpret(data, args):
+def interpret(data, **kw):
     for data_line_num, line in enumerate(data):
         line_num = file.index(data[data_line_num])
         returned = ""
@@ -273,6 +281,8 @@ def interpret(data, args):
         scmd = ccmd.split()
         scope = get_scope(line_num, ccmd)
         inter_var = get_var(scope)
+        args = kw.get("args")
+        full_var = merge_var_dicts(inter_var, args)
         if ccmd == "pass":
             pass
         elif scmd[0] == "var":
@@ -288,7 +298,7 @@ def interpret(data, args):
         elif ccmd == "forever {":
             forever_data = get_data(line_num, "{", "}", ccmd)
             while void_running:
-                forever_returned = interpret(forever_data, args)
+                forever_returned = interpret(forever_data, args=kw.get("args"))
                 if forever_returned == "break":
                     return
                 elif forever_returned == "continue":
@@ -297,7 +307,7 @@ def interpret(data, args):
             repeat_data = get_data(line_num, "{", "}", ccmd)
             repeat_times = parse_expr("".join(scmd[1:-1]), inter_var, scope, ccmd)
             for _ in range(repeat_times-1):
-                repeat_returned = interpret(repeat_data, args)
+                repeat_returned = interpret(repeat_data, args=kw.get("args"))
                 if repeat_returned == "break":
                     return
                 elif repeat_returned == "continue":
@@ -305,7 +315,7 @@ def interpret(data, args):
         elif "[" in ccmd and "]" in ccmd and re.findall(".+?(?=\[)", ccmd)[0] in inter_var:
             returned = modify_seq(line_num, ccmd, inter_var, scope)
         elif ccmd[-1] == ")" and re.findall("[^\s]+\(.*\)", ccmd)[0] == ccmd:
-            returned = interpret_func(ccmd, inter_var, scope)
+            returned = interpret_func(ccmd, inter_var, scope, args=kw.get("args"))
         if returned:
             return returned
 
@@ -352,6 +362,9 @@ ops = {
     ">>": operator.rshift,
     "<<": operator.lshift,
 }
+break_chars = ("}", "]", ")")
+start_chars = ("{", "[", "(")
+empty = (None, [], (), {}, "")
 file_offset = 1
 
 # process args
@@ -412,11 +425,12 @@ for line_num, line in enumerate(file):
     if scope != "root" and scope not in var["local"] and scope not in scopes:
         scopes[scope] = { "temp": {} }
         var["local"][scope] = {}
-    if s_line[0:9] == "func ":
+    if s_line[0:5] == "func ":
         func_name = re.sub("\(.*", "", s_line.replace("func ", ""))
+        func_data = get_data(line_num, "{", "}", s_line)
         funcs[func_name] = {
             "type": "defined",
-            "code": get_data(line_num, "{", "}", line)
+            "code": func_data
         }
 
 if "-t" in a:
@@ -428,7 +442,7 @@ signal(SIGINT, exit_void)
 
 # actually interpret
 void_running = True
-interpret(file, {})
+interpret(file)
 
 # time
 exit_void()
