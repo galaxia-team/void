@@ -1,11 +1,20 @@
 # void
 a simple programming language.
 
-void is inspired by python and javascript, and you will see elements from both throughout the language.
+## inspiration
+void is inspired by various languages:
+- go
+- python
+- javascript
+
+you will see elements from all of these languages within void.
+
+## how it works
+unlike normal interpreted languages, void does not use the usual `input -> tokens -> lexer -> parser -> output` format.
+
+how it actually works is quite stupid. i am not an experienced programmer, and it clearly shows here.
 
 ## usage
 ```
-python interpreter.py -f program.void
+go run void.go program.void
 ```
-
-you may also use the `-t` flag, to measure the time used for prep, and execution.

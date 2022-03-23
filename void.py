@@ -22,7 +22,7 @@ def get_scope(line_num, ccmd):
                 current_line = file[current_line_num]
             else:
                 return "root"
-            if current_line[-1] == "}":
+            if current_line and current_line[-1] == "}":
                 while current_line and current_line[-1] != "{":
                     current_line_num -= 1
                     if current_line_num >= 0:
@@ -30,7 +30,7 @@ def get_scope(line_num, ccmd):
                     else:
                         return "root"
         
-        if current_line[-1] == "{":
+        if current_line and current_line[-1] == "{":
             return f'{"".join(list(re.findall(".*{", current_line)[0])[:-1]).strip().replace(" ", "_")}_{current_line_num-1}'
 
 def get_data(line_num, start_char, break_char, ccmd):
@@ -122,7 +122,7 @@ def parse_list(unparsed_list, inter_var, scope, ccmd, **kw):
 
     return parsed_list
 
-def init_var(line_num, var_mode, ccmd, inter_var, scope):
+def init_var(var_mode, ccmd, inter_var, scope):
     var_name = re.sub("=.*", "", ccmd.replace(f"{var_mode} ", "")).strip()
     var_val = parse_expr(re.sub(f"{var_mode} {var_name}.*=", "", ccmd).lstrip(), inter_var, scope, ccmd)
 
@@ -152,7 +152,7 @@ def interpret_func(ccmd, inter_var, scope, **kw):
         else:
             return funcs[func_name]["code"](args)
     else:
-        return interpret(funcs[func_name]["code"], args=args)
+        return interpret(funcs[func_name]["code"], args=args, func=func_name)
 
 def modify_var(line_num, scmd, inter_var, scope):
     operator = scmd[1][:-1]
@@ -275,20 +275,24 @@ def parse_expr(expr, inter_var, scope, ccmd, **kw):
 # interpret
 def interpret(data, **kw):
     for data_line_num, line in enumerate(data):
-        line_num = file.index(data[data_line_num])
-        returned = ""
         ccmd = line.lstrip()
         scmd = ccmd.split()
-        scope = get_scope(line_num, ccmd)
+        returned = ""
+        if data[data_line_num] in file:
+            line_num = file.index(data[data_line_num])
+            scope = get_scope(line_num, ccmd)
+        else:
+            scope = kw.get("func")
+            print(data)
         inter_var = get_var(scope)
         args = kw.get("args")
         full_var = merge_var_dicts(inter_var, args)
         if ccmd == "pass":
             pass
         elif scmd[0] == "var":
-            returned = init_var(line_num, "var", ccmd, inter_var, scope) 
+            returned = init_var("var", ccmd, inter_var, scope) 
         elif scmd[0] == "const":
-            returned = init_var(line_num, "const", ccmd, inter_var, scope)
+            returned = init_var("const", ccmd, inter_var, scope)
         elif ccmd == "break":
             returned = "break"
         elif ccmd == "continue":
@@ -320,11 +324,6 @@ def interpret(data, **kw):
             return returned
 
 # variables
-keywords = [
-    "if",
-    "elif",
-    "else"
-]
 libs = {}
 funcs = {}
 scopes = {}
@@ -421,18 +420,38 @@ while "" in file:
 # process funcs and scopes
 for line_num, line in enumerate(file):
     s_line = line.lstrip()
+    if s_line in empty:
+        continue
     scope = get_scope(line_num, s_line)
+    print(scope)
     if scope != "root" and scope not in var["local"] and scope not in scopes:
         scopes[scope] = { "temp": {} }
         var["local"][scope] = {}
     if s_line[0:5] == "func ":
         func_name = re.sub("\(.*", "", s_line.replace("func ", ""))
         func_data = get_data(line_num, "{", "}", s_line)
+        current_line_num = line_num
+        current_line = s_line
+        file[line_num] = ""
+        while current_line[-1] != "}":
+            current_line_num += 1
+            current_line = file[current_line_num].lstrip()
+            file[current_line_num] = ""
+        scopes[scope] = { "temp": {} }
+        var["local"][scope] = {}
         funcs[func_name] = {
             "type": "defined",
             "code": func_data
         }
 
+# final cleanup
+while "" in file:
+    file_offset += 1
+    file.remove("")
+
+print(file)
+
+# time
 if "-t" in a:
     setuptime = time() * 1000 - setuptime
     runtime = time() * 1000
@@ -444,5 +463,5 @@ signal(SIGINT, exit_void)
 void_running = True
 interpret(file)
 
-# time
+# exit
 exit_void()
