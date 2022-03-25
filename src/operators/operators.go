@@ -1,36 +1,63 @@
 package operators
 
 import (
-    "fmt"
+    "github.com/galaxia-team/void/src/exception"
+    "github.com/galaxia-team/void/src/types"
     "strconv"
+    "reflect"
+    "math"
+    "fmt"
 )
 
-type VarTypes interface {
-    int | string | float64
-}
+const LogicalOps = []string{"&&", "||"}
 
-func ConvertType[T VarTypes](x string) T {
-    var iconv int
-    var f64conv float64
-    var ierr error
-    var f64err error
+func ApplyOperator(op string, x interface{}, y interface{}) interface{} {
+    xst = types.GetInterfaceType(x)
+    yst = types.GetInterfaceType(y)
 
-    string_x := fmt.Sprintf("%f", x)
-
-    iconv, ierr = strconv.Atoi(string_x)
-    if ierr == nil && fmt.Sprintf("%f", iconv) == x {
-        return T(iconv)
+    if v, ok := x.(string); ok {
+        x = v
+    } else if v, ok := x.(int); ok {
+        x = v
+    } else if v, ok := x.(uint); ok {
+        x = v
+    } else if v, ok := x.(float64); ok {
+        x = v
+    } else if v, ok := x.(bool); ok {
+        x = v
     }
 
-    f64conv, f64err = strconv.ParseFloat(string_x, 64)
-    if f64err == nil && fmt.Sprintf("%f", f64conv) == x {
-        return T(f64conv)
+    if v, ok := y.(string); ok {
+        y = v
+    } else if v, ok := y.(int); ok {
+        y = v
+    } else if v, ok := y.(uint); ok {
+        y = v
+    } else if v, ok := y.(float64); ok {
+        y = v
+    } else if v, ok := y.(bool); ok {
+        y = v
     }
 
-    return T(string_x)
-}
+    xt = reflect.TypeOf(x)
+    yt = reflect.TypeOf(y)
 
-func ApplyOperator[T VarTypes](op string, x T, y T) T {
+    if xt == string && yt == string {
+        switch (op) {
+            case "+":
+                return x + y, nil
+            default:
+                return "", errors.New("invalid operation")
+        }
+    } else if xt == int && yt == int {
+        switch (op) {
+            case "+":
+                return x + y, nil
+            default:
+                return "", errors.New("invalid operation")
+        }
+    }
+
     switch (op) {
         case "+":
             return x + y
@@ -38,8 +65,12 @@ func ApplyOperator[T VarTypes](op string, x T, y T) T {
             return x - y
         case "*":
             return x * y
+        case "**":
+            return math.Pow(x, y)
         case "/":
             return x / y
+        case "//":
+            return math.Floor(x / y)
         case "%":
             return x % y
         case "&":

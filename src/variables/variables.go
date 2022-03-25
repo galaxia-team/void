@@ -1,17 +1,65 @@
 package variables
 
+import (
+    "github.com/galaxia-team/void/src/exception"
+    "github.com/galaxia-team/void/src/parsers"
+    "github.com/galaxia-team/void/src/utils"
+    "strings"
+)
+
 type Var struct {
     mutable bool
     name, scope, val string
 }
 
-var Vars = map[string]interface{} {}
+var LocalVars = map[string]map[string]Var {}
 
-func InitVar(scmd []string, vscope string) {
-    Vars[scmd[1]] = Var{
-        mutable: scmd[0] == "var",
-        name: scmd[1],
-        scope: vscope,
-        val: "wip",
+var GlobalVars = map[string]Var {}
+
+func InitVar(fc []string, vs string, n int) {
+    vt := fc[0]
+    vn := fc[1]
+    if fc[2] != "=" {
+        exception.Except("invalid_syntax", n)
+    }
+    fc = utils.RemoveIndex(fc, 0)
+    fc = utils.RemoveIndex(fc, 0)
+    fc = utils.RemoveIndex(fc, 0)
+    vst := strings.Join(fc, " ")
+    vv := parsers.ParseStatement(vst)
+    if vt == "let" {
+        if vs != "root" {
+            LocalVars[vs][vn] = Var{
+                mutable: true,
+                name: vn,
+                scope: vs,
+                val: vv,
+            }
+        } else {
+            GlobalVars[vn] = Var{
+                mutable: true,
+                name: vn,
+                scope: vs,
+                val: vv,
+            }
+        }
+    } else if _, ok := Vars[vn]; !ok {
+        if vs != "root" {
+            LocalVars[vs][vn] = Var{
+                mutable: false,
+                name: vn,
+                scope: vs,
+                val: vv,
+            }
+        } else {
+            GlobalVars[vn] = Var{
+                mutable: false,
+                name: vn,
+                scope: vs,
+                val: vv,
+            }
+        }     
+    } else {
+        exception.Except("const_immutable", n)
     }
 }

@@ -1,6 +1,5 @@
 package main
 
-// imports
 import (
     "github.com/galaxia-team/void/src/exception"
     "github.com/galaxia-team/void/src/preprocessor"

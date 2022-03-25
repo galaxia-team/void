@@ -40,6 +40,11 @@ func Contains(s []string, v interface{}) bool {
     return false
 }
 
+var (
+    GlobalData = map[string]string {}
+    LocalData = map[string]map[string]string {}
+)
+
 const (
     Version = "0.0.1"
     VersionName = "abyss"

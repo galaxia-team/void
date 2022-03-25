@@ -14,17 +14,19 @@ var (
     }
 
     Exceptions = map[string]string {
-        "cannot_concat_int": "integers and strings cannot be concatenated.",
+        "str_add_int": "cannot add int to string.",
+        "str_add_float": "cannot add int to float.",
         "const_immutable": "variables defined with const are immutable; they cannot be modified.",
+        "invalid_syntax": "invalid syntax.",
         "loc_not_int": "if changing an item in a list, the index must be an integer.",
     }
 )
 
-func Except(e string, lnum int) {
+func Except(e string, n int) {
     if _, ok := NoLineExceptions[e]; ok {
         fmt.Println(fmt.Sprintf("EXCEPTION | %s", NoLineExceptions[e]))
     } else {
-        fmt.Println(fmt.Sprintf("EXCEPTION (line %d) | %s", lnum, Exceptions[e]))
+        fmt.Println(fmt.Sprintf("EXCEPTION (line %d) | %s", n, Exceptions[e]))
     }
     os.Exit(1)
 }
