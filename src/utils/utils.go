@@ -5,12 +5,28 @@ import (
     "runtime"
 )
 
+var (
+    GlobalData = map[string]string {}
+    LocalData = map[string]map[string]string {}
+    CurrentLine = 0
+)
+
+const (
+    Version = "0.0.1"
+    VersionName = "abyss"
+    VersionState = "pre-alpha"
+)
+
 func GetVersion() string {
     return fmt.Sprintf("void version %s '%s' (%s) %s/%s", Version, VersionName, VersionState, runtime.GOOS, runtime.GOARCH)
 }
 
 func GetHelp() string {
     return fmt.Sprintf("usage:\nvoid <argument or file>\n\narguments:\nhelp - print this help screen\nversion - print void version")
+}
+
+func Extend(s1, s2 []string) []string {
+    return append(s1, s2...)
 }
 
 func RemoveIndex(s []string, i int) []string {
@@ -39,14 +55,3 @@ func Contains(s []string, v interface{}) bool {
     }
     return false
 }
-
-var (
-    GlobalData = map[string]string {}
-    LocalData = map[string]map[string]string {}
-)
-
-const (
-    Version = "0.0.1"
-    VersionName = "abyss"
-    VersionState = "pre-alpha"
-)

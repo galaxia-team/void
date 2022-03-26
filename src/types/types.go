@@ -5,35 +5,29 @@ import (
     "strconv"
 )
 
-const TrueStrings = []string{"true", "True", "TRUE"}
-
-const FalseStrings = []string{"false", "False", "FALSE"}
-
-func GetInterfaceType(x interface{}) string {
-    if _, ok := x.(string); ok {
-        return "string"
-    } else if _, ok := x.(int); ok {
+func GetType(x interface{}) string {
+    if _, ok := x.(int); ok {
         return "int"
-    } else if _, ok := x.(uint); ok {
-        return "uint"
     } else if _, ok := x.(float64); ok {
         return "float"
     } else if _, ok := x.(bool); ok {
         return "bool"
-    } else {
-        panic("OHHH SHI- (GetInterfaceType issue)")
     }
+    return "string"
 }
 
-func PsuedoBool(pb interface{}) bool {
+func ConvertType(x string) interface{} {
+    var ierr error
+    var i64conv int64
     
-    if pb[0:1] == "!" {
-        
+    if x[0:2] == "0x" {
+        i64conv, ierr = strconv.ParseInt(x, 16, 64)
+    } else {
+        i64conv, ierr = strconv.ParseInt(x, 10, 64)
     }
-}
-
-func ParseType(x string) interface{} {
-    iconv, ierr := strconv.ParseInt(x)
+    
+    iconv := int(i64conv)
+    
     if ierr == nil && fmt.Sprintf("%f", iconv) == x {
         return iconv
     }
@@ -41,11 +35,6 @@ func ParseType(x string) interface{} {
     fconv, ferr := strconv.ParseFloat(x, 64)
     if ferr == nil && fmt.Sprintf("%f", fconv) == x {
         return fconv
-    }
-
-    uiconv, uierr := strconv.ParseUint(x)
-    if uierr == nil && fmt.Sprintf("%f", uiconv) == x {
-        return uiconv
     }
 
     bconv, berr := strconv.ParseBool(x)
