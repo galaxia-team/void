@@ -6,7 +6,7 @@ import (
     "fmt"
 )
 
-func ParseBoolWrapper(b string, n int) bool {
+func GetBool(b string, n int) bool {
     nb := ConvertType(b)
     bt := GetType(nb)
 

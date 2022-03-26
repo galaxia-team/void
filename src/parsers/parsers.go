@@ -10,6 +10,10 @@ import (
     "fmt"
 )
 
+func ParseLiteral(l string, n int) interface{} {
+    return l
+}
+
 func ParseArray(a string, s string) interface{} {
     var e string
     
@@ -25,6 +29,15 @@ func ParseArray(a string, s string) interface{} {
     }
     
     fmt.Println("end char: ", e)
+
+    refstr1 := regexp.MustCompile(`f".*"`)
+    refstr2 := regexp.MustCompile(`f'.*'`)
+    
+    fstrs := utils.Extend(refstr1.FindAllString(a, -1), refstr2.FindAllString(a, -1))
+
+    for fn, fstr := range fstrs {
+        a = strings.Replace(a, fstr, fmt.Sprintf("VOID_PA_FSTR_%f", fn), -1)
+    }
 
     restr1 := regexp.MustCompile(`".*"`)
     restr2 := regexp.MustCompile(`'.*'`)

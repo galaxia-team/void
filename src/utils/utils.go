@@ -5,9 +5,16 @@ import (
     "runtime"
 )
 
+type Var struct {
+    mutable bool
+    name, scope, val string
+}
+
 var (
     GlobalData = map[string]string {}
     LocalData = map[string]map[string]string {}
+    GlobalVars = map[string]Var {}
+    LocalVars = map[string]map[string]Var {}
 )
 
 const (

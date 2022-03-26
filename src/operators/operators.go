@@ -115,21 +115,21 @@ func ApplyOperator(op string, x interface{}, y interface{}, n int) interface{} {
         }
     } else {
         if sx != "" {
-            bx = types.ParseBoolWrapper(sx, n)
+            bx = types.GetBool(sx, n)
         } else if ix != 0 {
-            bx = types.ParseBoolWrapper(fmt.Sprintf("%d", ix), n)
+            bx = types.GetBool(fmt.Sprintf("%d", ix), n)
         } else if fx != 0 {
-            bx = types.ParseBoolWrapper(fmt.Sprintf("%f", fx), n)
+            bx = types.GetBool(fmt.Sprintf("%f", fx), n)
         } else {
             by = false
         }
 
         if sy != "" {
-            by = types.ParseBoolWrapper(sy, n)
+            by = types.GetBool(sy, n)
         } else if iy != 0 {
-            by = types.ParseBoolWrapper(fmt.Sprintf("%d", iy), n)
+            by = types.GetBool(fmt.Sprintf("%d", iy), n)
         } else if fy != 0 {
-            by = types.ParseBoolWrapper(fmt.Sprintf("%f", fy), n)
+            by = types.GetBool(fmt.Sprintf("%f", fy), n)
         } else {
             by = false
         }
