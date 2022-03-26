@@ -8,7 +8,6 @@ import (
 var (
     GlobalData = map[string]string {}
     LocalData = map[string]map[string]string {}
-    CurrentLine = 0
 )
 
 const (

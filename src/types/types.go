@@ -1,9 +1,33 @@
 package types
 
 import (
-    "fmt"
+    "github.com/galaxia-team/void/src/exception"
     "strconv"
+    "fmt"
 )
+
+func ParseBoolWrapper(b string, n int) bool {
+    nb := ConvertType(b)
+    bt := GetType(nb)
+
+    switch (bt) {
+        case "string":
+            sb, _ := nb.(string)
+            return sb != ""
+        case "bool":
+            bb, _ := nb.(bool)
+            return bb
+        case "int":
+            cb, _ := nb.(int)
+            return cb > 0
+        case "float":
+            cb, _ := nb.(float64)
+            return cb >= 1
+    }
+
+    exception.Except("not_bool", n)
+    return false
+}
 
 func GetType(x interface{}) string {
     if _, ok := x.(int); ok {

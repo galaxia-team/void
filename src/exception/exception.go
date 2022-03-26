@@ -17,6 +17,8 @@ var (
         "str_add_int": "cannot add int to string.",
         "str_add_float": "cannot add int to float.",
         "not_bool": "boolean argument not a boolean.",
+        "invalid_op": "invalid operation.",
+        "invalid_type": "invalid type.",
         "const_immutable": "variables defined with const are immutable; they cannot be modified.",
         "invalid_syntax": "invalid syntax.",
         "loc_not_int": "if changing an item in a list, the index must be an integer.",
