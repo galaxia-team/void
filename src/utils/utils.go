@@ -10,11 +10,18 @@ type Var struct {
     name, scope, val string
 }
 
+type Func struct {
+    name string
+    data func(map[string]interface{}) interface{}
+}
+
 var (
     GlobalData = map[string]string {}
     LocalData = map[string]map[string]string {}
     GlobalVars = map[string]Var {}
     LocalVars = map[string]map[string]Var {}
+    GlobalFuncs = map[string]map[string]Func {}
+    LocalFuncs = map[string]map[string]map[string]Func {}
 )
 
 const (
