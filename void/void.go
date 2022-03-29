@@ -1,8 +1,9 @@
 package main
 
 import (
-    "github.com/galaxia-team/void/void/src/exception"
     "github.com/galaxia-team/void/void/src/preprocessor"
+    "github.com/galaxia-team/void/void/src/gitwrapper"
+    "github.com/galaxia-team/void/void/src/exception"
     "github.com/galaxia-team/void/void/src/utils"
     "bufio"
     "fmt"
@@ -11,19 +12,34 @@ import (
 
 func main() {
     a := os.Args[1:]
-    if utils.Contains(a, "help") {
-        fmt.Println(utils.GetHelp())
+    if len(a) == 0 {
+        fmt.Println("must specify a command\n")
+        utils.PrintHelp()
+        os.Exit(0)      
+    }
+    if !utils.Contains(utils.Arguments, a[0]) {
+        fmt.Println("invalid usage\n")
+        utils.PrintHelp()
         os.Exit(0)
     }
-    if utils.Contains(a, "version") {
-        fmt.Println(utils.GetVersion())
-        os.Exit(0)
-    }
-    fp := a[0]
-    var fd []string
-    if fp == "" {
+    if a[0] == "run" && len(a) == 1 {
         exception.Except("file_not_specified", 0)
-    } else if fp[len(fp)-5:] != ".void" {
+    }
+    if a[0] == "help" {
+        utils.PrintHelp()
+        os.Exit(0)
+    }
+    if a[0] == "version" {
+        utils.PrintVersion()
+        os.Exit(0)
+    }
+    if a[0] == "update" {
+        gitwrapper.Update()
+        os.Exit(0)
+    }
+
+    fp := a[1]
+    if fp[len(fp)-5:] != ".void" {
         exception.Except("file_not_void", 0)
     } else {
         _, serr := os.Stat(fp)
@@ -31,6 +47,7 @@ func main() {
             exception.Except("file_not_found", 0)
         }
     }
+    var fd []string
     f, ferr := os.Open(fp)
     if ferr == nil {
         sc := bufio.NewScanner(f)
@@ -41,5 +58,6 @@ func main() {
     } else {
         exception.Except("file_not_accessible", 0)
     }
+    f.Close()
     preprocessor.PreProcess(fd)
 }

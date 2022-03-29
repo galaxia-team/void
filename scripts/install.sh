@@ -15,7 +15,7 @@ if [ ! -d "/usr/share/void" ]; then
     cp -r ./void/* /usr/share/void
     cd /usr/share/void
     echo "building..."
-    go build -ldflags "-X 'utils.Commit=$commit' -X 'utils.RootDir=/usr/share/void'"
+    go build -ldflags "-X 'utils.Commit=$commit' -X 'utils.RootDir=/usr/share/void/'"
     echo "installing..."
     mv ./void /usr/local/bin
     echo -e "void installed successfully.\n"
@@ -32,7 +32,7 @@ if [ ! -d "/usr/share/vpkg" ]; then
     cp -r ./vpkg/* /usr/share/vpkg
     cd /usr/share/vpkg
     echo "building..."
-    go build -ldflags "-X 'utils.Commit=$commit' -X 'utils.RootDir=/usr/share/vpkg'"
+    go build -ldflags "-X 'utils.Commit=$commit' -X 'utils.RootDir=/usr/share/vpkg/'"
     echo "installing..."
     mv ./vpkg /usr/local/bin
     echo -e "vpkg installed successfully.\n"

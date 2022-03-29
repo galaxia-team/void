@@ -1,8 +1,8 @@
 package utils
 
 import (
-    "fmt"
     "runtime"
+    "fmt"
 )
 
 type Var struct {
@@ -22,6 +22,22 @@ var (
     LocalVars = map[string]map[string]Var {}
     GlobalFuncs = map[string]map[string]Func {}
     LocalFuncs = map[string]map[string]map[string]Func {}
+    Arguments = []string {
+        "help",
+        "version",
+        "run",
+        "update",
+    }
+    Help = []string {
+        "usage:",
+        "void <argument> <file (optional)>",
+        "",
+        "arguments:",
+        "help - print this help screen",
+        "version - print void version",
+        "run - run specified void file",
+        "update - update void to the latest version.",
+    }
     Commit = "N/A"
     RootDir = "./"
 )
@@ -32,12 +48,16 @@ const (
     VersionState = "pre-alpha"
 )
 
-func GetVersion() string {
-    return fmt.Sprintf("void version %s '%s' (%s) %s/%s commit %s", Version, VersionName, VersionState, runtime.GOOS, runtime.GOARCH, Commit)
+func PrintVersion() {
+    fmt.Printf("void version %s '%s' (%s) %s/%s commit %s\n", Version, VersionName, VersionState, runtime.GOOS, runtime.GOARCH, Commit)
+    return
 }
 
-func GetHelp() string {
-    return fmt.Sprintf("usage:\nvoid <argument or file>\n\narguments:\nhelp - print this help screen\nversion - print void version")
+func PrintHelp() {
+    for _, h := range Help {
+        fmt.Println(h)
+    }
+    return
 }
 
 func Extend(s1, s2 []string) []string {

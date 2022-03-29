@@ -7,10 +7,13 @@ import (
 
 var (
     NoLineExceptions = map[string]string {
-        "file_not_specified": "a file must be specified with the -f flag.",
+        "file_not_specified": "a file must be specified if using the 'run' flag.",
         "file_not_found": "the specified file cannot be found.",
         "file_not_accessible": "the specified file cannot be accessed.",
         "file_not_void": "the specified file must have the .void file extension.",
+        "incorrect_install": "void cannot be updated, as it has not been installed correctly.",
+        "git_unreachable": "void cannot be updated, as its git repo cannot be reached.",
+        "unexpected_error": "an unexpected and inexplainable error has occurred. please report this to the developers.", 
     }
 
     Exceptions = map[string]string {
