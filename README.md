@@ -6,7 +6,7 @@ a simple programming language.
 
 ## installation
 
-linux:
+currently only linux is supported.
 
 ```
 git clone https://github.com/galaxia-team/void.git
@@ -14,9 +14,15 @@ cd void
 sudo ./scripts/install.sh
 ```
 
-you can also specify a directory to install to:
+you can also specify a directory to install to.
 
 ```
 sudo ./scripts/install.sh /usr/share/void # default
 sudo ./scripts/install.sh /usr/local/share/void
+```
+
+## usage
+
+```
+void ./program.void
 ```
