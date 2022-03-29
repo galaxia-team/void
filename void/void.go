@@ -19,7 +19,7 @@ func main() {
         fmt.Println(utils.GetVersion())
         os.Exit(0)
     }
-    fp := args[0]
+    fp := a[0]
     var fd []string
     if fp == "" {
         exception.Except("file_not_specified", 0)
@@ -31,9 +31,9 @@ func main() {
             exception.Except("file_not_found", 0)
         }
     }
-    file, ferr := os.Open(fp)
+    f, ferr := os.Open(fp)
     if ferr == nil {
-        sc := bufio.NewScanner(file)
+        sc := bufio.NewScanner(f)
         sc.Split(bufio.ScanLines)
         for sc.Scan() {
             fd = append(fd, sc.Text())
