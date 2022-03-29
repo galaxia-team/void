@@ -1,10 +1,10 @@
 package interpreter
 
 import (
-    //"github.com/galaxia-team/void/src/exception"
-    "github.com/galaxia-team/void/src/variables"
-    "github.com/galaxia-team/void/src/scopes"
-    "github.com/galaxia-team/void/src/utils"
+    //"github.com/galaxia-team/void/void/src/exception"
+    "github.com/galaxia-team/void/void/src/variables"
+    "github.com/galaxia-team/void/void/src/scopes"
+    "github.com/galaxia-team/void/void/src/utils"
     "strings"
     //"fmt"
 )

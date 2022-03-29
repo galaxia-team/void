@@ -14,15 +14,18 @@ cd void
 sudo ./scripts/install.sh
 ```
 
-you can also specify a directory to install to.
-
-```
-sudo ./scripts/install.sh /usr/share/void # default
-sudo ./scripts/install.sh /usr/local/share/void
-```
-
 ## usage
+
+running programs:
 
 ```
 void ./program.void
+```
+
+handling libraries:
+
+```
+vpkg update
+vpkg install example
+vpkg uninstall example
 ```

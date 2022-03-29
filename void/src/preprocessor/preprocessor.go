@@ -1,8 +1,8 @@
 package preprocessor
 
 import (
-    "github.com/galaxia-team/void/src/interpreter"
-    "github.com/galaxia-team/void/src/utils"
+    "github.com/galaxia-team/void/void/src/interpreter"
+    "github.com/galaxia-team/void/void/src/utils"
     "strings"
 )
 

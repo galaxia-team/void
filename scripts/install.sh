@@ -5,22 +5,40 @@ if [ $EUID != 0 ]; then
     exit
 fi
 
-default_dir="/usr/share/void"
-install_dir=${1:-default_dir}
 commit=$(git log -1 | head -n 1 | sed -e "s/commit//")
 
-if [ ! -d $install_dir ]; then
+echo -e "installing void...\n"
+
+if [ ! -d "/usr/share/void" ]; then
     echo "moving files..."
     mkdir /usr/share/void
-    cp -r ./* /usr/share/void
+    cp -r ./void/* /usr/share/void
     cd /usr/share/void
-    rm -rf examples .gitignore .git
     echo "building..."
-    go build -ldflags "-X 'utils.Commit=$commit' -X 'utils.RootDir=$install_dir'"
+    go build -ldflags "-X 'utils.Commit=$commit' -X 'utils.RootDir=/usr/share/void'"
     echo "installing..."
     mv ./void /usr/local/bin
-    echo "installation successful"
+    echo -e "void installed successfully.\n"
 else
-    echo "directory already exists"
+    echo "directory '/usr/share/void' already exists!"
     exit
 fi
+
+echo -e "installing vpkg...\n"
+
+if [ ! -d "/usr/share/vpkg" ]; then
+    echo "moving files..."
+    mkdir /usr/share/vpkg
+    cp -r ./vpkg/* /usr/share/vpkg
+    cd /usr/share/vpkg
+    echo "building..."
+    go build -ldflags "-X 'utils.Commit=$commit' -X 'utils.RootDir=/usr/share/vpkg'"
+    echo "installing..."
+    mv ./vpkg /usr/local/bin
+    echo -e "vpkg installed successfully.\n"
+else
+    echo "directory '/usr/share/vpkg' already exists!"
+    exit
+fi
+
+echo -e "installation successful."

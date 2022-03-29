@@ -1,8 +1,8 @@
 package operators
 
 import (
-    "github.com/galaxia-team/void/src/exception"
-    "github.com/galaxia-team/void/src/types"
+    "github.com/galaxia-team/void/void/src/exception"
+    "github.com/galaxia-team/void/void/src/types"
     "math"
     "fmt"
 )

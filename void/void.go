@@ -1,21 +1,21 @@
 package main
 
 import (
-    "github.com/galaxia-team/void/src/exception"
-    "github.com/galaxia-team/void/src/preprocessor"
-    "github.com/galaxia-team/void/src/utils"
+    "github.com/galaxia-team/void/void/src/exception"
+    "github.com/galaxia-team/void/void/src/preprocessor"
+    "github.com/galaxia-team/void/void/src/utils"
     "bufio"
     "fmt"
     "os"
 )
 
 func main() {
-    args := os.Args[1:]
-    if utils.Contains(args, "help") {
+    a := os.Args[1:]
+    if utils.Contains(a, "help") {
         fmt.Println(utils.GetHelp())
         os.Exit(0)
     }
-    if utils.Contains(args, "version") {
+    if utils.Contains(a, "version") {
         fmt.Println(utils.GetVersion())
         os.Exit(0)
     }

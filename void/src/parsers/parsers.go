@@ -1,10 +1,10 @@
 package parsers
 
 import (
-    //"github.com/galaxia-team/void/src/exception"
-    //"github.com/galaxia-team/void/src/operators"
-    //"github.com/galaxia-team/void/src/types"
-    "github.com/galaxia-team/void/src/utils"
+    //"github.com/galaxia-team/void/void/src/exception"
+    //"github.com/galaxia-team/void/void/src/operators"
+    //"github.com/galaxia-team/void/void/src/types"
+    "github.com/galaxia-team/void/void/src/utils"
     "strings"
     "regexp"
     "fmt"
