@@ -23,7 +23,7 @@ var (
     GlobalFuncs = map[string]map[string]Func {}
     LocalFuncs = map[string]map[string]map[string]Func {}
     Commit = "N/A"
-    RootDir = "/usr/share/void"
+    RootDir = "./"
 )
 
 const (

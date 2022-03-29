@@ -16,7 +16,7 @@ if [ ! -d $install_dir ]; then
     cd /usr/share/void
     rm -rf examples .gitignore .git
     echo "building..."
-    go build -ldflags "-X 'utils.Commit=$commit'"
+    go build -ldflags "-X 'utils.Commit=$commit' -X 'utils.RootDir=$install_dir'"
     echo "installing..."
     mv ./void /usr/local/bin
     echo "installation successful"
