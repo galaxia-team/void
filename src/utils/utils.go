@@ -22,6 +22,8 @@ var (
     LocalVars = map[string]map[string]Var {}
     GlobalFuncs = map[string]map[string]Func {}
     LocalFuncs = map[string]map[string]map[string]Func {}
+    Commit = "N/A"
+    RootDir = "/usr/share/void"
 )
 
 const (
@@ -31,7 +33,7 @@ const (
 )
 
 func GetVersion() string {
-    return fmt.Sprintf("void version %s '%s' (%s) %s/%s", Version, VersionName, VersionState, runtime.GOOS, runtime.GOARCH)
+    return fmt.Sprintf("void version %s '%s' (%s) %s/%s commit %s", Version, VersionName, VersionState, runtime.GOOS, runtime.GOARCH, Commit)
 }
 
 func GetHelp() string {

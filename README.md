@@ -4,14 +4,12 @@
 
 a simple programming language.
 
-## usage
-```
-go run void.go program.void
-```
+## installation
 
-or, you can build and run it instead:
+linux:
 
 ```
-go build void.go
-./void program.void
+git clone https://github.com/galaxia-team/void.git
+cd void
+sudo ./scripts/install.sh
 ```
