@@ -19,7 +19,7 @@ sudo ./scripts/install.sh
 running programs:
 
 ```
-void ./program.void
+void run ./program.void
 ```
 
 handling libraries:

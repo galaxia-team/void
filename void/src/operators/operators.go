@@ -40,7 +40,7 @@ func ApplyOperator(op string, x interface{}, y interface{}, n int) interface{} {
 
     var xok bool
     var yok bool
-    
+
     var sx string
     var ix int
     var fx float64
@@ -50,7 +50,7 @@ func ApplyOperator(op string, x interface{}, y interface{}, n int) interface{} {
     var iy int
     var fy float64
     var by bool
-    
+
     switch (xt) {
         case "string":
             sx, xok = x.(string)
@@ -72,11 +72,11 @@ func ApplyOperator(op string, x interface{}, y interface{}, n int) interface{} {
         case "bool":
             by, yok = y.(bool)
     }
-    
+
     if !xok || !yok {
         exception.Except("invalid_type", n)
     }
-    
+
     if _, ok := BoolOps[op]; !ok {
         if xt == "string" && yt == "string" {
             if _, ok := StringOps[op]; ok {
@@ -133,10 +133,10 @@ func ApplyOperator(op string, x interface{}, y interface{}, n int) interface{} {
         } else {
             by = false
         }
-        
+
         return BoolOps[op](bx, by)
     }
-    
+
     return ""
 }
 

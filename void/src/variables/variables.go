@@ -55,7 +55,7 @@ func InitVar(fc []string, vs string, n int) {
                 scope: vs,
                 val: vv,
             }
-        }     
+        }
     } else {
         exception.Except("const_immutable", n)
     }

@@ -1,13 +1,19 @@
 package utils
 
 import (
-    "github.com/go-git/go-git/v5"
     "runtime"
     "fmt"
 )
 
 var (
-    Arguments = []string {"help", "version", "install", "uninstall", "update"}
+    Arguments = []string {
+        "help",
+        "version",
+        "install",
+        "uninstall",
+        "update",
+        "list",
+    }
     Help = []string {
         "usage:",
         "vpkg <argument> <package (optional)>",
@@ -15,9 +21,10 @@ var (
         "arguments:",
         "help - print vpkg or vpkg package help screen",
         "version - print vpkg or vpkg package version",
-        "install - install vpkg package",
-        "uninstall - uninstall vpkg package",
+        "install - install vpkg package(s)",
+        "uninstall - uninstall vpkg package(s)",
         "update - update vpkg or vpkg package to latest version",
+        "list - list all installed vpkg packages",
     }
     Commit = "N/A"
     RootDir = "./"
@@ -29,12 +36,8 @@ const (
     VersionState = "pre-alpha"
 )
 
-func GitClone() {
-    return
-}
-
 func PrintVersion() {
-    fmt.Printf("void version %s '%s' (%s) %s/%s commit %s\n", Version, VersionName, VersionState, runtime.GOOS, runtime.GOARCH, Commit)
+    fmt.Printf("vpkg version %s '%s' (%s) %s/%s commit %s\n", Version, VersionName, VersionState, runtime.GOOS, runtime.GOARCH, Commit)
 }
 
 func PrintHelp() {

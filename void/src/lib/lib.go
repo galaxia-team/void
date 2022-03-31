@@ -7,5 +7,5 @@ import (
 
 func GetLib(l string) {
     i = strings.Replace(l, ".", "/", -1)
-    return 
+    return
 }

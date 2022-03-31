@@ -15,7 +15,7 @@ func main() {
     if len(a) == 0 {
         fmt.Println("must specify a command\n")
         utils.PrintHelp()
-        os.Exit(0)      
+        os.Exit(0)
     }
     if !utils.Contains(utils.Arguments, a[0]) {
         fmt.Println("invalid usage\n")

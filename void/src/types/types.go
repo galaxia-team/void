@@ -43,15 +43,15 @@ func GetType(x interface{}) string {
 func ConvertType(x string) interface{} {
     var ierr error
     var i64conv int64
-    
+
     if x[0:2] == "0x" {
         i64conv, ierr = strconv.ParseInt(x, 16, 64)
     } else {
         i64conv, ierr = strconv.ParseInt(x, 10, 64)
     }
-    
+
     iconv := int(i64conv)
-    
+
     if ierr == nil && fmt.Sprintf("%f", iconv) == x {
         return iconv
     }

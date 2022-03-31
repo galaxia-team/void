@@ -11,9 +11,11 @@ var (
         "file_not_found": "the specified file cannot be found.",
         "file_not_accessible": "the specified file cannot be accessed.",
         "file_not_void": "the specified file must have the .void file extension.",
-        "incorrect_install": "void cannot be updated, as it has not been installed correctly.",
-        "git_unreachable": "void cannot be updated, as its git repo cannot be reached.",
-        "unexpected_error": "an unexpected and inexplainable error has occurred. please report this to the developers.", 
+        "incorrect_install": "void has not been installed correctly. please (re)install void.",
+        "not_root": "please run void as root.",
+        "cant_fetch_user": "cannot fetch current user.",
+        "git_unreachable": "cannot reach void's git repository.",
+        "unexpected_error": "an unexpected error has occurred.",
     }
 
     Exceptions = map[string]string {

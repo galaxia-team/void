@@ -6,5 +6,5 @@ import (
 )
 
 func Update() {
-    fmt.Println("fetching latest vpkgs...")   
+    fmt.Println("fetching latest vpkgs...")
 }
