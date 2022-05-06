@@ -4,8 +4,8 @@ import (
     "github.com/galaxia-team/void/void/src/preprocessor"
     "github.com/galaxia-team/void/void/src/gitwrapper"
     "github.com/galaxia-team/void/void/src/exception"
+    "github.com/galaxia-team/void/void/src/system"
     "github.com/galaxia-team/void/void/src/utils"
-    "bufio"
     "fmt"
     "os"
 )
@@ -42,22 +42,9 @@ func main() {
     if fp[len(fp)-5:] != ".void" {
         exception.Except("file_not_void", 0)
     } else {
-        _, serr := os.Stat(fp)
-        if serr != nil {
+        if !system.PathExists(fp) {
             exception.Except("file_not_found", 0)
         }
     }
-    var fd []string
-    f, ferr := os.Open(fp)
-    if ferr == nil {
-        sc := bufio.NewScanner(f)
-        sc.Split(bufio.ScanLines)
-        for sc.Scan() {
-            fd = append(fd, sc.Text())
-        }
-    } else {
-        exception.Except("file_not_accessible", 0)
-    }
-    f.Close()
-    preprocessor.PreProcess(fd)
+    preprocessor.PreProcess(system.ReadFile(fp))
 }

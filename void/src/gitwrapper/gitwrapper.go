@@ -37,23 +37,17 @@ func Update() {
         exception.Except("incorrect_install", 0)
     }
     */
+    dd := utils.RootDir+"voidupdate"
     fmt.Println("cloning repo...\n")
-    d, err := Clone("https://github.com/galaxia-team/void.git", utils.RootDir+"voidupdate")
+    if system.PathExists(dd) {
+        os.Remove(dd)
+    }
+    d, err := Clone("https://github.com/galaxia-team/void.git", dd)
     if err == nil {
         c = CommitHashString(d)
-        bc := []string {
-            "go",
-            "build",
-            "-ldflags",
-            `"-X`,
-            "'utils.Commit="+c+"'",
-            "-X",
-            `'utils.RootDir=`+utils.RootDir+`'"`,
-            "-v",
-        }
         os.Chdir(utils.RootDir+"voidupdate/void")
         fmt.Println("\nbuilding...\n")
-        o := system.ExecCommand(bc, 0)
+        o := system.ExecCommand(`go build -ldflags "-X 'utils.Commit=`+c+`' -X 'utils.RootDir=`+utils.RootDir+`'" -v`, 0)
         fmt.Println(o)
     } else {
         exception.Except("git_unreachable", 0)
